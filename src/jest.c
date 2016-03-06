@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef unsigned char bool;
+typedef unsigned char BOOL;
 typedef unsigned char byte;
 typedef unsigned short word;
 
@@ -18,14 +18,15 @@ typedef unsigned short word;
 #define FALSE	0
 
 #define ERRLVL_SUCCESS			0
-#define ERRLVL_NO_INPUT_FILE	1
-#define ERRLVL_UNKNOWN_OPTION	2
-#define ERRLVL_ERROR_OTHER		3
-#define ERRLVL_ERROR_LOADING	4
+#define ERRLVL_PARSE_ERROR		1
+#define ERRLVL_NO_INPUT_FILE	2
+#define ERRLVL_UNKNOWN_OPTION	3
+#define ERRLVL_ERROR_OTHER		4
+#define ERRLVL_ERROR_LOADING	5
 
 //compiler modes
-bool CM_QUIET = FALSE;
-bool CM_COMPILE_ONLY = FALSE;
+BOOL CM_QUIET = FALSE;
+BOOL CM_COMPILE_ONLY = FALSE;
 
 #include "memory.c"
 #include "util.c"
@@ -42,7 +43,7 @@ int main( int argc, char **argv )
 	{
 		printf( "Usage:\n\tjest source.jst {-options}\n\n" );
 		printf( "\t-q \tquiet mode (only prints error messages)\n" );
-		printf( "\t-c \tcompile only (do not generate executable file)\n" );
+		printf( "\t-c \tcompile only (do not generate executable file)\n\n" );
 		return 0;
 	}
 
@@ -60,14 +61,14 @@ int main( int argc, char **argv )
 			{
 				CM_COMPILE_ONLY = TRUE;
 			} else {
-				printf( "\tUnknown option: \"%s\"\n", argv[i]+1 );
+				printf( "\tUnknown option: \"%s\"\n\n", argv[i]+1 );
 				return ERRLVL_UNKNOWN_OPTION;
 			}
 		} else {
 			//an input file
 			if( input_file )
 			{
-				printf( "\tOnly one input file is allowed for now.\n" );
+				printf( "\tOnly one input file is allowed for now.\n\n" );
 				return ERRLVL_ERROR_OTHER;
 			}
 			size_t ifn_size = strlen( argv[i] );
@@ -81,18 +82,12 @@ int main( int argc, char **argv )
 	//no input file?
 	if( !input_file )
 	{
-		printf( "\tNo input file specified!\n" );
+		printf( "\tNo input file specified!\n\n" );
 		return ERRLVL_NO_INPUT_FILE;
 	}
 
-	char *input_file_buffer = LoadFileToMemory( input_file );
-	if( !input_file_buffer )
-	{
-		printf( "\tError reading input file: \"%s\"\n", input_file );
-		return ERRLVL_ERROR_LOADING;
-	}
-
-
+	Tokenizer tokenizer;
+	if( !Parse( &tokenizer, input_file ) ) return ERRLVL_PARSE_ERROR;
 
 	return ERRLVL_SUCCESS;
 }

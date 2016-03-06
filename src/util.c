@@ -14,12 +14,13 @@ static char *LoadFileToMemory( const char *file_name )
 	f = fopen( file_name, "rb" );
 	if( f )
 	{
-		size_t file_size;
 		fseek( f, 0, SEEK_END );
-		file_size = ftell( f );
+		size_t file_size = ftell( f );
+		fseek( f, 0, SEEK_SET );
 		char *text = (char*)mem_alloc( file_size+1 );
-		fread( text, 0, file_size, f );
-		text[file_size] = 0;
+		fread( text, 1, file_size, f );
+		text[file_size] = '\0';
+		fclose( f );
 		return text;
 	} 
 	return NULL;

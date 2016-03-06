@@ -7,7 +7,7 @@
 	06/03/2016
 */
 
-///mem_alloc
+//mem_alloc
 static void *mem_alloc( size_t size )
 {
 	//TODO: use some kind of memory pool?
