@@ -7,6 +7,11 @@
 	06/03/2016
 */
 
+//MSVC hack
+#ifndef inline
+#define inline __inline
+#endif
+
 enum TokenType
 {
 	TK_UNKNOWN,
@@ -48,7 +53,7 @@ typedef struct Token
 
 
 //InitTokenizer
-BOOL InitTokenizer( Tokenizer *tokenizer, const char *file_name )
+static inline bool8 InitTokenizer( Tokenizer *tokenizer, const char *file_name )
 {
 	char *input_file_buffer = LoadFileToMemory( file_name );
 	if( !input_file_buffer )
@@ -65,7 +70,7 @@ BOOL InitTokenizer( Tokenizer *tokenizer, const char *file_name )
 }
 
 //EatWhiteSpaces
-void EatWhiteSpaces( Tokenizer *tokenizer )
+static void EatWhiteSpaces( Tokenizer *tokenizer )
 {
 	while( tokenizer->pos[0] )
 	{
@@ -85,23 +90,19 @@ void EatWhiteSpaces( Tokenizer *tokenizer )
 }
 
 //IsAlpha
-BOOL IsAlpha( char c )
+static inline bool8 IsAlpha( char c )
 {
-	if( (c>='a' && c<='z') ||
-		(c>='A' && c<='Z') ||
-		c=='_' ) return TRUE;
-	return FALSE;
+	return ( (c>='a' && c<='z') || (c>='A' && c<='Z') || c=='_' );
 }
 
 //IsDigit
-BOOL IsDigit( char c )
+static inline bool8 IsDigit( char c )
 {
-	if( c>='0' && c<='9' ) return TRUE;
-	return FALSE;
+	return ( c>='0' && c<='9' );
 }
 
 //GetToken
-Token GetToken( Tokenizer *tokenizer )
+static Token GetToken( Tokenizer *tokenizer )
 {
 	EatWhiteSpaces( tokenizer );
 
@@ -143,7 +144,7 @@ Token GetToken( Tokenizer *tokenizer )
 }
 
 //Parse
-BOOL Parse( Tokenizer *tokenizer, const char *file_name )
+static bool8 Parse( Tokenizer *tokenizer, const char *file_name )
 {
 	if( !InitTokenizer( tokenizer, file_name ) ) return FALSE;
 

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef unsigned char BOOL;
+typedef unsigned char bool8;
 typedef unsigned char byte;
 typedef unsigned short word;
 
@@ -25,8 +25,8 @@ typedef unsigned short word;
 #define ERRLVL_ERROR_LOADING	5
 
 //compiler modes
-BOOL CM_QUIET = FALSE;
-BOOL CM_COMPILE_ONLY = FALSE;
+bool8 CM_QUIET = FALSE;
+bool8 CM_COMPILE_ONLY = FALSE;
 
 #include "memory.c"
 #include "util.c"
