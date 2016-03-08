@@ -4,6 +4,9 @@
 	Here's what I'm aiming for in this language:
 */
 
+//void type
+void v0;
+
 //signed and unsigned 8, 16, 32 and 64 bit 
 s8 v1;
 u8 v2;
@@ -18,12 +21,22 @@ u64 v8;
 f32 v9;
 f64 v10;
 
+//pointer types
+s8 *v11;
+void *v00;
+
 /* 
 	basic types introspection:
 		._min - minimum value
 		._max - maximum value
 		._init - default value
 		._epsilon - only floating-point types
+		._name - a string with the type's name
+		._size - size in bytes (0 for void, 4 or 8 for pointer types)
+
+	variable/statement level introspection:
+		._name - a string with the name of the variable or the complete statement
+		._type - the type of the var. or return of the statement
 */
 
 //structures
@@ -41,17 +54,28 @@ struct Vec3
 /*
 	structures introspection:
 		._member_count - number of members (u32)
-		._member_name[] - array with members names (as string)
-		._member_offset[] - array with members offsets (in bytes, u32)
-		._member_type_name[] - array with members types (as string)
-		._member_type[] - array with members types (the type itself)
+		._member[] - an array of the members themselves
+		._size - the size in bytes
 
 	also, each member of a struct contains:
 		._offset - the offset of the member (u32)
-		._name - a string representing the name of the member
-		._type_name - a string representing the member's type
-		._type - the type of the member
 */
+
+//enums
+
+enum NamedEnum : u8
+{
+	VALUE1,
+	VALUE2,
+}
+
+//"constants"
+enum VALUE3 = 5;
+enum VALUE4 : f32 = 6;
+
+//aliases
+alias byte = u8;
+alias vector3 = Vec3;
 
 void main()
 {
@@ -64,6 +88,13 @@ void main()
 	printf( "s32 min/max values are (%/%)\n", s32._min, s32._max );
 	printf( "f64 epsilon is %\n", f64._epsilon );	
 
+	s8 w;
+	printf( "%'s type name is %s\n", w._name, w._type._name );
+	//output: w's type name is s8
+
+	//create a var. with the same type as w's
+	w._type w2;
+		
 	assert( Vec2._member_count==2 );
 	assert( Vec3._member_count==3 );
 	assert( Vec3.z._offset==8 );
@@ -71,10 +102,10 @@ void main()
 	printf( "Listing Vec3's members:\n" );
 	for( int i=0; i<Vec3._member_count; i++ )
 	{
-		printf( "\tmember(%) name(%) offset(%)\n", i, Vec3._member_name[i], Vec3._member_offset[i] );
+		printf( "\tmember(%) name(%) offset(%) type_name(%)\n", i, Vec3._member[i]._name, Vec3._member[i]._offset, Vec3._member[i]._type._name );
 	}
 
-	//binary, ocal and hexadecimal notations
+	//binary, octal and hexadecimal notations
 	u8 i1 = 0b10101010;
 	u8 i2 = 0xFF;
 	u8 i3 = 0o377;	
@@ -85,6 +116,21 @@ void main()
 		s32 result = param*i2;
 		return result;
 	}
+
+	//...and nested blocks, with their own scoped things
+	{
+		struct ScopedStruct
+		{
+			u32 value1, value2;
+		}
+		ScopedStruct data;
+	}
+
+	//heap allocator, deallocator and defer
+	u8 *pixels = new(256*256);
+	defer delete(pixels);
+	for( int i=0; i<256*256; ++i )
+		pixels[i] = i%255;
 }
 
 //EOF

@@ -12,6 +12,7 @@ static void *mem_alloc( size_t size )
 {
 	//TODO: use some kind of memory pool?
 	void *ptr = malloc( size );
+	if( !ptr ) Panic( "OUT OF MEMORY" );
 	return ptr;
 }
 

@@ -7,85 +7,8 @@
 	06/03/2016
 */
 
-//MSVC hack
-#ifndef inline
-#define inline __inline
-#endif
-
-enum TokenType
-{
-	TK_UNKNOWN,
-	TK_IDENTIFIER,
-	TK_EQUALS,
-	TK_PLUS,
-	TK_MINUS,
-	TK_STAR,
-	TK_SLASH,
-	TK_COLON,
-	TK_SEMI_COLON,
-	TK_COMMA,
-	TK_OPEN_PAREN,
-	TK_CLOSE_PAREN,
-	TK_OPEN_BRACE,
-	TK_CLOSE_BRACE,
-	TK_OPEN_BRACKET,
-	TK_CLOSE_BRACKET,
-	TK_STRING,
-	TK_NUMERIC,
-	//TODO: keywords?
-	TK_KEYWORD,
-	//TODO: traits?
-	TK_TRAIT,
-	TK_END_OF_STREAM
-};
-
-static const char *Token_Type_Names[TK_END_OF_STREAM] = {
-	"unknown",
-	"identifier",
-	"equal sign",
-	"plus sign",
-	"minus sign",
-	"asterisk",
-	"slash",
-	"colon",
-	"semi-colon",
-	"comma",
-	"open parenthesis",
-	"close parenthesis",
-	"open brace",
-	"close brace",
-	"open bracket",
-	"close bracket",
-	"string",
-	"numeric",
-	"keyword",
-	"trait"
-};
-
-#define KEYWORD_COUNT 17
-static const char *Keywords[KEYWORD_COUNT] = {
-	"void", "s8",  "u8", "s16", "u16", "s32", "u32", "s64", "u64", "f32", "f64",
-	"struct", "while", "for", "return", "if", "use"
-};
-
-typedef struct Tokenizer
-{
-	int line;
-	char *pos;
-	char *file_name;
-	//TODO: introduce "kind"? to specify KEYWORDS, integer, floating etc?
-} Tokenizer;
-
-typedef struct Token
-{
-	byte type;	
-	int length;
-	char *text;
-} Token;
-
-
 //InitTokenizer
-static inline bool8 InitTokenizer( Tokenizer *tokenizer, const char *file_name )
+static inline bool8 InitTokenizer( Tokenizer *tokenizer, char *file_name )
 {
 	char *input_file_buffer = LoadFileToMemory( file_name );
 	if( !input_file_buffer )
@@ -95,10 +18,23 @@ static inline bool8 InitTokenizer( Tokenizer *tokenizer, const char *file_name )
 	}
 
 	tokenizer->line = 1;
+	tokenizer->col = 1;
 	tokenizer->pos = input_file_buffer;
-	tokenizer->file_name = (char*)file_name;
+	tokenizer->file_name = file_name;
 
 	return TRUE;
+}
+
+//TkzAdvance
+static inline void TkzAdvance( Tokenizer *tokenizer )
+{
+	if( tokenizer->pos[0]=='\n' ) 
+	{
+		tokenizer->line++;
+		tokenizer->col = 0;
+	}	
+	tokenizer->pos++;
+	if( tokenizer->pos[0]!='\r' ) tokenizer->col++;
 }
 
 //EatWhiteSpaces
@@ -108,49 +44,45 @@ static void EatWhiteSpaces( Tokenizer *tokenizer )
 	{
 		if( tokenizer->pos[0]==' '  ||
 			tokenizer->pos[0]=='\t' ||
-			tokenizer->pos[0]=='\r' )
+			tokenizer->pos[0]=='\r' ||
+			tokenizer->pos[0]=='\n' )
 		{
-			tokenizer->pos++;
-		} else
-		if( tokenizer->pos[0]=='\n' )
+			TkzAdvance( tokenizer );
+		} 
+		else if( tokenizer->pos[0]=='/' )
 		{
-			tokenizer->line++;
-			tokenizer->pos++;
-		} else
-		if( tokenizer->pos[0]=='/' )
-		{
-			tokenizer->pos++;
+			TkzAdvance( tokenizer );
 			if( tokenizer->pos[0] )
 			{
 				//single-line comment
 				if( tokenizer->pos[0]=='/' )
 				{
-					tokenizer->pos++;
+					TkzAdvance( tokenizer );
 					while( tokenizer->pos[0] )
 					{
 						if( tokenizer->pos[0]=='\n' || tokenizer->pos[1]=='\r' )
 						{
-							tokenizer->pos++;
+							TkzAdvance( tokenizer );
 							break;
 						}
-						tokenizer->pos++;
+						TkzAdvance( tokenizer );
 					}
 				} else
 				//multi-line comment
 				if( tokenizer->pos[0]=='*' )
 				{
-					tokenizer->pos++;
+					TkzAdvance( tokenizer );
 					while( tokenizer->pos[0] )
 					{
 						if( tokenizer->pos[0]=='*' )
 						{
 							if( tokenizer->pos[1] && tokenizer->pos[1]=='/' )
 							{
-								tokenizer->pos++;
+								TkzAdvance( tokenizer );
 								break;
 							}
 						}
-						tokenizer->pos++;
+						TkzAdvance( tokenizer );
 					}
 				}
 			} 
@@ -171,7 +103,7 @@ static inline bool8 IsDigit( char c )
 }
 
 //CompareString
-static bool8 CompareString( char *token, int length, const char *compare_to )
+static bool8 CompareString( char *token, int length, char *compare_to )
 {
 	for( int i=0; i<length; i++ )
 	{
@@ -188,6 +120,14 @@ static inline bool8 IsKeyword( char *str, int length )
 	return FALSE;
 }
 
+//IsBuiltinType
+static inline bool8 IsBasicType( char *str, int length )
+{
+	for( int i=0; i<BASIC_TYPE_COUNT; ++i )
+		if( CompareString( str, length, BasicTypes[i] ) ) return TRUE;
+	return FALSE;
+}
+
 //GetToken
 static Token GetToken( Tokenizer *tokenizer )
 {
@@ -197,6 +137,9 @@ static Token GetToken( Tokenizer *tokenizer )
 	token.type = TK_UNKNOWN;
 	token.text = tokenizer->pos;
 	token.length = 1;
+	token.file = tokenizer->file_name;
+	token.line = tokenizer->line;
+	token.col = tokenizer->col;
 
 	if( tokenizer->pos[0]==0 )
 	{
@@ -228,7 +171,7 @@ static Token GetToken( Tokenizer *tokenizer )
 		{
 			//TODO: consider ""
 			token.type = TK_STRING;
-			tokenizer->pos++;
+			TkzAdvance( tokenizer );
 			token.text = tokenizer->pos;
 			int length = 1;
 			while( tokenizer->pos[0] )
@@ -236,17 +179,13 @@ static Token GetToken( Tokenizer *tokenizer )
 				if( tokenizer->pos[0]=='"' ) break;
 				else if( tokenizer->pos[0]=='\\' )
 				{
-					if( tokenizer->pos[1] )	tokenizer->pos++;
-					//else ERROR
+					if( tokenizer->pos[1] )	TkzAdvance( tokenizer ); else break;
 				}
-				tokenizer->pos++;
+				TkzAdvance( tokenizer );
 				length++;
 			}
-			if( tokenizer->pos[0]!='"' )
-			{
-				//TODO: ERROR, unfinished string literal
-			}
-			token.length = length;
+			if( tokenizer->pos[0]!='"' ) Error( token.file, token.line, token.col, "unfinished string literal" );
+			token.length = (token.text==tokenizer->pos)?0:length;
 		} break;
 
 		default:
@@ -255,61 +194,49 @@ static Token GetToken( Tokenizer *tokenizer )
 			if( IsAlpha( tokenizer->pos[0] ) )
 			{
 				token.type = TK_IDENTIFIER;
-				tokenizer->pos++;
+				TkzAdvance( tokenizer );
 				int length = 1;
 				while( tokenizer->pos[0] )
 				{
 					if( !( IsAlpha(tokenizer->pos[0]) || IsDigit(tokenizer->pos[0]) || tokenizer->pos[0]=='_' || tokenizer->pos[0]=='.' ) ) 
 					{
 						tokenizer->pos--;
+						tokenizer->col--;
 						break;
 					}
-					tokenizer->pos++;
+					TkzAdvance( tokenizer );
 					length++;
 				}
 				token.length = length;
 				//check if it's a keyword
 				if( IsKeyword( token.text, token.length ) ) token.type = TK_KEYWORD;
+				else if( IsBasicType( token.text, token.length ) ) token.type = TK_BASIC_TYPE;
 			} else
 			//number?
-			if( IsDigit( tokenizer->pos[0] ) || tokenizer->pos[0]=='.' )
+			if( IsDigit( tokenizer->pos[0] ) )
 			{
 				//TODO: hex, binary, float etc...
 				token.type = TK_NUMERIC;
-				tokenizer->pos++;
+				TkzAdvance( tokenizer );
 				int length = 1;
 				while( tokenizer->pos[0] )
 				{
 					if( !IsDigit( tokenizer->pos[0] ) ) 
 					{
 						tokenizer->pos--;
+						tokenizer->col--;
 						break;
 					}
-					tokenizer->pos++;
+					TkzAdvance( tokenizer );
 					length++;
 				}
 				token.length = length;
 			}
 		} break;
 	}
-	if( tokenizer->pos[0] ) tokenizer->pos++;
+	if( tokenizer->pos[0] )	TkzAdvance( tokenizer );
 
 	return token;
-}
-
-//Parse
-static bool8 Parse( Tokenizer *tokenizer, const char *file_name )
-{
-	if( !InitTokenizer( tokenizer, file_name ) ) return FALSE;
-
-	while( TRUE )
-	{
-		Token token = GetToken( tokenizer );
-		if( token.type==TK_END_OF_STREAM ) break;
-		printf( "line(%.5d) type(%20s): [%.*s]\n", tokenizer->line, Token_Type_Names[token.type], token.length, token.text );
-	}
-
-	return TRUE;
 }
 
 //EOF

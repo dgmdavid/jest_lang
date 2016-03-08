@@ -8,46 +8,46 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
+#include <time.h>
 
-typedef unsigned char bool8;
-typedef unsigned char byte;
-typedef unsigned short word;
+static char str_tmp_buffer[4096];
 
 #define TRUE	1
 #define FALSE	0
 
-#define ERRLVL_SUCCESS			0
-#define ERRLVL_PARSE_ERROR		1
-#define ERRLVL_NO_INPUT_FILE	2
-#define ERRLVL_UNKNOWN_OPTION	3
-#define ERRLVL_ERROR_OTHER		4
-#define ERRLVL_ERROR_LOADING	5
+#define ERRLVL_SUCCESS			 0
+#define ERRLVL_PARSE_ERROR		 1
+#define ERRLVL_NO_INPUT_FILE	 2
+#define ERRLVL_UNKNOWN_OPTION	 3
+#define ERRLVL_ERROR_OTHER		 4
+#define ERRLVL_ERROR_LOADING	 5
+#define ERRLVL_PANIC			10
+
+//MSVC hack
+#ifndef inline
+#define inline __inline
+#endif
+
+#include "types.c"
 
 //compiler modes
 bool8 CM_QUIET = FALSE;
 bool8 CM_COMPILE_ONLY = FALSE;
 
+#include "log.c"
 #include "memory.c"
 #include "util.c"
 #include "lexer.c"
+#include "parser.c"
 
 //main
 int main( int argc, char **argv )
 {
-	printf( "Jest Compiler v0.1\n");
-	printf( "Copyleft (c) 2016 by David G. Maziero\n\n" );
-
-	//no arguments?
-	if( argc==1 )
-	{
-		printf( "Usage:\n\tjest source.jst {-options}\n\n" );
-		printf( "\t-q \tquiet mode (only prints error messages)\n" );
-		printf( "\t-c \tcompile only (do not generate executable file)\n\n" );
-		return 0;
-	}
-
 	char *input_file = 0;
+	
+	//parse command-line arguments
 	for( int i=1; i<argc; ++i )
 	{
 		//an option
@@ -79,6 +79,21 @@ int main( int argc, char **argv )
 		
 	}
 
+	if( !CM_QUIET )
+	{
+		printf( "Jest Compiler v0.1\n");
+		printf( "Copyleft (c) 2016 by David G. Maziero\n\n" );
+	}
+
+	//no arguments?
+	if( argc==1 )
+	{
+		printf( "Usage:\n\tjest source.jst {-options}\n\n" );
+		printf( "\t-q \tquiet mode (only prints error messages)\n" );
+		printf( "\t-c \tcompile only (do not generate executable file)\n\n" );
+		return 0;
+	}
+	
 	//no input file?
 	if( !input_file )
 	{
@@ -88,7 +103,7 @@ int main( int argc, char **argv )
 
 	Tokenizer tokenizer;
 	if( !Parse( &tokenizer, input_file ) ) return ERRLVL_PARSE_ERROR;
-
+	
 	return ERRLVL_SUCCESS;
 }
 

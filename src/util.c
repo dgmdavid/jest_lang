@@ -8,7 +8,7 @@
 */
 
 //LoadFileToMemory
-static char *LoadFileToMemory( const char *file_name )
+static char *LoadFileToMemory( char *file_name )
 {
 	FILE *f;
 	f = fopen( file_name, "rb" );
