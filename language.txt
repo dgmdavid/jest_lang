@@ -1,0 +1,90 @@
+/*
+	Jest Language
+
+	Here's what I'm aiming for in this language:
+*/
+
+//signed and unsigned 8, 16, 32 and 64 bit 
+s8 v1;
+u8 v2;
+s16 v3;
+u16 v4;
+s32 v5;
+u32 v6;
+s64 v7;
+u64 v8;
+
+//floating point
+f32 v9;
+f64 v10;
+
+/* 
+	basic types introspection:
+		._min - minimum value
+		._max - maximum value
+		._init - default value
+		._epsilon - only floating-point types
+*/
+
+//structures
+struct Vec2
+{
+	f32 x, y;
+}
+
+struct Vec3
+{
+	use Vec2;
+	f32 z;
+}
+
+/*
+	structures introspection:
+		._member_count - number of members (u32)
+		._member_name[] - array with members names (as string)
+		._member_offset[] - array with members offsets (in bytes, u32)
+		._member_type_name[] - array with members types (as string)
+		._member_type[] - array with members types (the type itself)
+
+	also, each member of a struct contains:
+		._offset - the offset of the member (u32)
+		._name - a string representing the name of the member
+		._type_name - a string representing the member's type
+		._type - the type of the member
+*/
+
+void main()
+{
+	Vec3 v3;
+	v3.x = 10;
+
+	assert( u8._size==1 );
+	assert( s32._size==4 );
+
+	printf( "s32 min/max values are (%/%)\n", s32._min, s32._max );
+	printf( "f64 epsilon is %\n", f64._epsilon );	
+
+	assert( Vec2._member_count==2 );
+	assert( Vec3._member_count==3 );
+	assert( Vec3.z._offset==8 );
+
+	printf( "Listing Vec3's members:\n" );
+	for( int i=0; i<Vec3._member_count; i++ )
+	{
+		printf( "\tmember(%) name(%) offset(%)\n", i, Vec3._member_name[i], Vec3._member_offset[i] );
+	}
+
+	//binary, ocal and hexadecimal notations
+	u8 i1 = 0b10101010;
+	u8 i2 = 0xFF;
+	u8 i3 = 0o377;	
+
+	//nested functions
+	s32 Foo( s32 param )
+	{
+		s32 result = param*i2;
+		return result;
+	}
+}
+
+//EOF
