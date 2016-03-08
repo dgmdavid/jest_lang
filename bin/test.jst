@@ -1,7 +1,45 @@
+//single-line comment
+/* 
+	multi-line comment
+	:)
+*/
 
+s8 a1,a3;
+u8 a2;
 
- ()[]{}/+=-:.
-,;
+s16 b1;
+u16 b2;
 
+s32 c1;
+u32 c2;
 
-oi
+s64 d1;//a comment
+u64 d2;/* another
+comment
+  */f32 e1;
+f64 e2;
+
+struct Data
+{
+	s32 x, y;
+}
+
+struct Data2
+{
+	use Data;
+	s32 z;
+/* yep, another one**/}
+
+void main()
+{
+	Data var;
+	var.x = 500;
+	u8 array[100];
+
+	printf( "s8 size in bytes: %\n", s8._size );
+	printf( "Data has % members.\n", Data._member_count );
+	printf( "Data2 has % members.\n", Data2._member_count );
+	printf( "This works too: %\n", var._member_count );
+	printf( "u32 max value is %.\n", u32._max );
+	printf( "f32 epsilon is %.\n", f32._epsilon );
+}
