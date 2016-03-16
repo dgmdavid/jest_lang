@@ -37,6 +37,29 @@ enum TokenType
 };
 
 static char *Token_Type_Names[TK_END_OF_STREAM] = {
+	"",
+	"identifier",
+	"=",
+	"+",
+	"-",
+	"*",
+	"/",
+	":",
+	";",
+	",",
+	"(",
+	")",
+	"{",
+	"}",
+	"[",
+	"]",
+	"string",
+	"numeric",
+	"keyword",
+	"basic type"
+};
+
+static char *Token_Type_Desc[TK_END_OF_STREAM] = {
 	"unknown",
 	"identifier",
 	"equal sign",
@@ -80,7 +103,6 @@ typedef struct Token
 {
 	int length;
 	char *text;
-	char *file;
 	int line, col;
 	byte type;	
 	//TODO: introduce "kind"? to specify KEYWORDS, integer, floating etc?

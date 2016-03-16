@@ -44,6 +44,7 @@ static void EatWhiteSpaces( Tokenizer *tokenizer )
 	{
 		if( tokenizer->pos[0]==' '  ||
 			tokenizer->pos[0]=='\t' ||
+			tokenizer->pos[0]=='\b' ||
 			tokenizer->pos[0]=='\r' ||
 			tokenizer->pos[0]=='\n' )
 		{
@@ -105,10 +106,12 @@ static inline bool8 IsDigit( char c )
 //CompareString
 static bool8 CompareString( char *token, int length, char *compare_to )
 {
-	for( int i=0; i<length; i++ )
+	int i=0;
+	for( i=0; i<length; i++ )
 	{
 		if( compare_to[i]==0 || token[i]!=compare_to[i] ) return FALSE;
 	}
+	if( compare_to[i]!=0 ) return FALSE;
 	return TRUE;
 }
 
@@ -137,7 +140,6 @@ static Token GetToken( Tokenizer *tokenizer )
 	token.type = TK_UNKNOWN;
 	token.text = tokenizer->pos;
 	token.length = 1;
-	token.file = tokenizer->file_name;
 	token.line = tokenizer->line;
 	token.col = tokenizer->col;
 
@@ -184,7 +186,7 @@ static Token GetToken( Tokenizer *tokenizer )
 				TkzAdvance( tokenizer );
 				length++;
 			}
-			if( tokenizer->pos[0]!='"' ) Error( token.file, token.line, token.col, "unfinished string literal" );
+			if( tokenizer->pos[0]!='"' ) Error( tokenizer->file_name, token.line, token.col, "unfinished string literal" );
 			token.length = (token.text==tokenizer->pos)?0:length;
 		} break;
 
@@ -211,9 +213,9 @@ static Token GetToken( Tokenizer *tokenizer )
 				//check if it's a keyword
 				if( IsKeyword( token.text, token.length ) ) token.type = TK_KEYWORD;
 				else if( IsBasicType( token.text, token.length ) ) token.type = TK_BASIC_TYPE;
-			} else
+			}
 			//number?
-			if( IsDigit( tokenizer->pos[0] ) )
+			else if( IsDigit( tokenizer->pos[0] ) )
 			{
 				//TODO: hex, binary, float etc...
 				token.type = TK_NUMERIC;
@@ -237,6 +239,29 @@ static Token GetToken( Tokenizer *tokenizer )
 	if( tokenizer->pos[0] )	TkzAdvance( tokenizer );
 
 	return token;
+}
+
+//Peek
+static Token Peek( Tokenizer *tokenizer )
+{
+	Tokenizer previous_state = *tokenizer;
+	Token token = GetToken( tokenizer );
+	*tokenizer = previous_state;
+	return token;
+}
+
+//Expect
+static bool8 Expect( Tokenizer *tokenizer, byte token_type )
+{
+	Tokenizer previous_state = *tokenizer;
+	Token token = GetToken( tokenizer );
+	if( token.type!=token_type )
+	{
+		Error( tokenizer->file_name, token.line, token.col, "Expected \"%s\", found \"%.*s\".", Token_Type_Names[token_type], token.length, token.text ); 
+		*tokenizer = previous_state;
+		return FALSE;
+	}
+	return TRUE;
 }
 
 //EOF

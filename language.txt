@@ -76,6 +76,8 @@ enum VALUE4 : f32 = 6;
 //aliases
 alias byte = u8;
 alias vector3 = Vec3;
+//TODO: should alias only accept things that are valid in its scope,
+//or should it work more like a #define?
 
 void main()
 {

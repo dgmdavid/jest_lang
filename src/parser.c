@@ -16,7 +16,7 @@ static bool8 Parse( Tokenizer *tokenizer, char *file_name )
 	{
 		Token token = GetToken( tokenizer );
 		if( token.type==TK_END_OF_STREAM ) break;
-		printf( "(%.3d,%.2d) type(%13s): [%.*s]\n", token.line, token.col, Token_Type_Names[token.type], token.length, token.text );
+		printf( "(%.3d,%.2d) type(%13s): [%.*s]\n", token.line, token.col, Token_Type_Desc[token.type], token.length, token.text );
 	}
 
 	return TRUE;
