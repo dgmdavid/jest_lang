@@ -109,7 +109,7 @@ void main()
 
 	//binary, octal and hexadecimal notations
 	u8 i1 = 0b10101010;
-	u8 i2 = 0xFF;
+	u8 i2 = 0xFF; //or 0hFF
 	u8 i3 = 0o377;	
 
 	//nested functions

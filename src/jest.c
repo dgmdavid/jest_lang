@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 
 static char str_tmp_buffer[4096];
 

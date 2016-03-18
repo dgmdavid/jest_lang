@@ -29,8 +29,10 @@ enum TokenType
 	TK_CLOSE_BRACE,
 	TK_OPEN_BRACKET,
 	TK_CLOSE_BRACKET,
+	TK_EXCLAMATION,
 	TK_STRING,
-	TK_NUMERIC,
+	TK_NUMERIC_INTEGER,
+	TK_NUMERIC_FLOATING,
 	TK_KEYWORD,
 	TK_BASIC_TYPE,
 	TK_END_OF_STREAM
@@ -53,8 +55,10 @@ static char *Token_Type_Names[TK_END_OF_STREAM] = {
 	"}",
 	"[",
 	"]",
+	"!",
 	"string",
-	"numeric",
+	"integral",
+	"floating",
 	"keyword",
 	"basic type"
 };
@@ -76,8 +80,10 @@ static char *Token_Type_Desc[TK_END_OF_STREAM] = {
 	"close brace",
 	"open bracket",
 	"close bracket",
+	"exclamation",
 	"string",
-	"numeric",
+	"integral number",
+	"floating number",
 	"keyword",
 	"basic type"
 };
@@ -87,9 +93,9 @@ static char *BasicTypes[BASIC_TYPE_COUNT] = {
 	"void", "s8",  "u8", "s16", "u16", "s32", "u32", "s64", "u64", "f32", "f64",
 };
 
-#define KEYWORD_COUNT 9
+#define KEYWORD_COUNT 11
 static char *Keywords[KEYWORD_COUNT] = {
-	"import", "alias", "struct", "while", "for", "return", "if", "use", "defer"
+	"import", "alias", "struct", "while", "for", "return", "if", "use", "defer", "true", "false"
 };
 
 typedef struct Tokenizer
@@ -97,6 +103,8 @@ typedef struct Tokenizer
 	int line, col;
 	char *pos;
 	char *file_name;
+	//TODO: should I pass a length here?
+	//int length;
 } Tokenizer;
 
 typedef struct Token
@@ -105,7 +113,19 @@ typedef struct Token
 	char *text;
 	int line, col;
 	byte type;	
-	//TODO: introduce "kind"? to specify KEYWORDS, integer, floating etc?
+	union
+	{
+		long long numeric_integer;
+		long double numeric_floating;
+	};
 } Token;
+
+typedef enum NumericType
+{
+	NT_DECIMAL,
+	NT_BINARY,
+	NT_HEXADECIMAL,
+	NT_OCTAL
+} NumericType;
 
 //EOF
